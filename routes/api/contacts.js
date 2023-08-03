@@ -1,25 +1,34 @@
-const express = require('express')
+const express = require('express');
+const contactsDB = require('../../models/contacts');
 
-const router = express.Router()
+const router = express.Router();
 
 router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const contactsArray = await contactsDB.listContacts();
+  res.json(contactsArray);
+});
 
 router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const { contactId } = req.params;
+  const contactById = await contactsDB.getContactById(contactId);
+  res.json(contactById);
+});
 
 router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const newContact = await contactsDB.addContact(req.query);
+  res.json(newContact);
+});
 
 router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const { contactId } = req.params;
+  const deletedContact = contactsDB.removeContact(contactId);
+  res.json(deletedContact);
+});
 
 router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+  const { contactId } = req.params;
+  const editedObj = await contactsDB.updateContact(contactId, { ...req.query });
+  res.json(editedObj);
+});
 
-module.exports = router
+module.exports = router;
