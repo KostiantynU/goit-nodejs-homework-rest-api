@@ -1,34 +1,18 @@
 const express = require('express');
-const contactsDB = require('../../models/contacts');
-
 const router = express.Router();
+const ctrl = require('../../controllers/contacts');
 
-router.get('/', async (req, res, next) => {
-  const contactsArray = await contactsDB.listContacts();
-  res.json(contactsArray);
-});
+const { validateBody } = require('../../middlewares');
+const contactsSchema = require('../../schemas/contacts');
 
-router.get('/:contactId', async (req, res, next) => {
-  const { contactId } = req.params;
-  const contactById = await contactsDB.getContactById(contactId);
-  res.json(contactById);
-});
+router.get('/', ctrl.getAll);
 
-router.post('/', async (req, res, next) => {
-  const newContact = await contactsDB.addContact(req.query);
-  res.json(newContact);
-});
+router.get('/:contactId', ctrl.getById);
 
-router.delete('/:contactId', async (req, res, next) => {
-  const { contactId } = req.params;
-  const deletedContact = contactsDB.removeContact(contactId);
-  res.json(deletedContact);
-});
+router.post('/', validateBody(contactsSchema.addSchema), ctrl.addContactPost);
 
-router.put('/:contactId', async (req, res, next) => {
-  const { contactId } = req.params;
-  const editedObj = await contactsDB.updateContact(contactId, { ...req.query });
-  res.json(editedObj);
-});
+router.delete('/:contactId', ctrl.deleteContact);
+
+router.put('/:contactId', validateBody(contactsSchema.addSchema), ctrl.updateContact);
 
 module.exports = router;
