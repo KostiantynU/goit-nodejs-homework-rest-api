@@ -1,3 +1,3 @@
-const validateBody = require('./middlewares');
+const { validateBody, validateFavorite } = require('./middlewares');
 
-module.exports = { validateBody };
+module.exports = { validateBody, validateFavorite };
