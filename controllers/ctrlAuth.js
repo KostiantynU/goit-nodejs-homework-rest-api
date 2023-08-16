@@ -70,7 +70,7 @@ const updateSubscription = async (req, res, nect) => {
     { new: true }
   );
 
-  res.status(200).json(updatedUserSubscription.subscription);
+  res.status(200).json({ subscription: updatedUserSubscription.subscription });
 };
 
 module.exports = {

@@ -16,7 +16,7 @@ authRouter.get('/current', authenticate, ctrlAuth.getCurrent);
 authRouter.post('/logout', authenticate, ctrlAuth.logout);
 
 authRouter.patch(
-  '/users',
+  '/',
   authenticate,
   validateSubscription(authSchemas.subscriptionSchema),
   ctrlAuth.updateSubscription
