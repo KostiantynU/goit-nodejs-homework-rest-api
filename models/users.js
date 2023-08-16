@@ -6,18 +6,25 @@ const emailRegExp = new RegExp('[A-Za-z0-9]+@[a-z]+.[a-z]{2,3}');
 
 const userSchema = new Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, match: emailRegExp, required: true, unique: true },
-    password: { type: String, minlength: 6, required: true },
+    // name: { type: String, required: true },
+    email: {
+      type: String,
+      match: emailRegExp,
+      required: [true, 'Email is required'],
+      unique: true,
+    },
+    password: { type: String, minlength: 6, required: [true, 'Set password for user'] },
+    subscription: { type: String, enum: ['starter', 'pro', 'business'], default: 'starter' },
     token: { type: String, default: '' },
   },
   { versionKey: false, timestamps: true }
 );
 
 const registerSchema = Joi.object({
-  name: Joi.string().required(),
+  // name: Joi.string().required(),
   email: Joi.string().pattern(emailRegExp).required(),
   password: Joi.string().min(6).required(),
+  subscription: Joi.string(),
 });
 
 const loginSchema = Joi.object({
@@ -25,7 +32,11 @@ const loginSchema = Joi.object({
   password: Joi.string().min(6).required(),
 });
 
-const authSchemas = { registerSchema, loginSchema };
+const subscriptionSchema = Joi.object({
+  subscription: Joi.string().required(),
+});
+
+const authSchemas = { registerSchema, loginSchema, subscriptionSchema };
 
 const User = model('user', userSchema);
 

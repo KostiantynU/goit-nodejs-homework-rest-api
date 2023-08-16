@@ -5,9 +5,9 @@ const validateBody = schema => {
     const { error } = schema.validate(req.body);
 
     if (error) {
-      next(HttpError(400, error.message));
+      next(HttpError(400, 'Помилка від Joi або іншої бібліотеки валідації'));
     }
-
+    //'Помилка від Joi або іншої бібліотеки валідації'
     next();
   };
 
@@ -19,7 +19,7 @@ const validateFavorite = schema => {
     const { error } = schema.validate(req.body);
 
     if (error) {
-      next(HttpError(400, 'missing field favorite'));
+      next(HttpError(400, 'Missing field favorite'));
     }
 
     next();
@@ -28,4 +28,18 @@ const validateFavorite = schema => {
   return func;
 };
 
-module.exports = { validateBody, validateFavorite };
+const validateSubscription = schema => {
+  const func = (req, res, next) => {
+    const { error } = schema.validate(req.body);
+
+    if (error) {
+      next(HttpError(400, 'Wrong value'));
+    }
+
+    next();
+  };
+
+  return func;
+};
+
+module.exports = { validateBody, validateFavorite, validateSubscription };

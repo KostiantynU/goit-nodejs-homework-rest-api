@@ -1,23 +1,28 @@
 const express = require('express');
 const contactRouter = express.Router();
 
-const ctrl = require('../../controllers/contactsDBctrl');
+const { ctrlContacts } = require('../../controllers/');
 
 const { validateBody, validateFavorite, isValidId, authenticate } = require('../../middlewares');
 const contactsSchema = require('../../schemas/contacts');
 
-contactRouter.get('/', authenticate, ctrl.getAll);
+contactRouter.get('/', authenticate, ctrlContacts.getAll);
 
-contactRouter.get('/:contactId', authenticate, isValidId, ctrl.getById);
+contactRouter.get('/:contactId', authenticate, isValidId, ctrlContacts.getById);
 
-contactRouter.post('/', authenticate, validateBody(contactsSchema.addSchema), ctrl.addContact);
+contactRouter.post(
+  '/',
+  authenticate,
+  validateBody(contactsSchema.addSchema),
+  ctrlContacts.addContact
+);
 
 contactRouter.put(
   '/:contactId',
   authenticate,
   isValidId,
   validateBody(contactsSchema.addSchema),
-  ctrl.updateContact
+  ctrlContacts.updateContact
 );
 
 contactRouter.patch(
@@ -25,9 +30,9 @@ contactRouter.patch(
   authenticate,
   isValidId,
   validateFavorite(contactsSchema.favoriteSchema),
-  ctrl.updateContactPatch
+  ctrlContacts.updateContactPatch
 );
 
-contactRouter.delete('/:contactId', authenticate, isValidId, ctrl.deleteContact);
+contactRouter.delete('/:contactId', authenticate, isValidId, ctrlContacts.deleteContact);
 
 module.exports = contactRouter;
