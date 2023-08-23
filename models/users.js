@@ -16,6 +16,7 @@ const userSchema = new Schema(
     password: { type: String, minlength: 6, required: [true, 'Set password for user'] },
     subscription: { type: String, enum: ['starter', 'pro', 'business'], default: 'starter' },
     token: { type: String, default: '' },
+    avatarUrl: { type: String, required: true },
   },
   { versionKey: false, timestamps: true }
 );
