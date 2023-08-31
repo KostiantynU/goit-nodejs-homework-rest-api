@@ -1,5 +1,6 @@
 const HttpError = require('./httperrors');
 const ctrlWrapper = require('./ctrlwrapper');
 const handleMongooseError = require('./handleMongooseError');
-const mgClient = require('./emailSender');
-module.exports = { HttpError, ctrlWrapper, handleMongooseError, mgClient };
+const sendEmail = require('./mailgun');
+const nodemailerTransport = require('./nodemailer');
+module.exports = { HttpError, ctrlWrapper, handleMongooseError, sendEmail, nodemailerTransport };

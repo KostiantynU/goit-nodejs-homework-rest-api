@@ -4,12 +4,13 @@ const gravatar = require('gravatar');
 const path = require('path');
 const fs = require('fs/promises');
 const Jimp = require('jimp');
+const { nanoid } = require('nanoid');
 
 const { SECRET_WORD } = process.env;
 
 const bcrypt = require('bcrypt');
 
-const { HttpError, ctrlWrapper } = require('../helpers');
+const { HttpError, ctrlWrapper, nodemailerTransport } = require('../helpers');
 const { error } = require('console');
 
 const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
@@ -24,7 +25,25 @@ const register = async (req, res, next) => {
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatarUrl = gravatar.url(email);
-  const newUser = await User.create({ ...req.body, password: hashPassword, avatarUrl });
+  const verificationCode = nanoid();
+
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarUrl,
+    verificationCode,
+  });
+
+  const verificationEmail = {
+    to: email,
+    subject: `Verify your e-mail`,
+    html: `<a target='_blank' href='http://localhost:3000/api/users/verify/${verificationCode}'>Click to verify your e-mail!</a>`,
+  };
+
+  const resultSend = await nodemailerTransport.sendMail({
+    ...verificationEmail,
+    from: 'engineerkonstantin@gmail.com',
+  });
 
   res.status(201).json({ user: { email: newUser.email, subscription: newUser.subscription } });
   // res.status(201).json({ name: newUser.name, emai: newUser.email });
@@ -98,6 +117,23 @@ const updateAvatar = async (req, res) => {
 
   res.status(200).json({ avatarUrl });
 };
+
+const verifyUser = async (req, res, next) => {
+  const { verificationCode } = req.params;
+
+  const verificatedUser = await User.findOne({ verificationCode: verificationCode });
+
+  if (!verificatedUser) {
+    return res.status(400).json({ message: 'Not found' });
+  }
+
+  verificatedUser.verify = true;
+  verificatedUser.verificationCode = '';
+  await verificatedUser.save();
+
+  res.status(200).json({ message: 'You successfully pass the verification!' });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
@@ -105,4 +141,5 @@ module.exports = {
   logout: ctrlWrapper(logout),
   updateSubscription: ctrlWrapper(updateSubscription),
   updateAvatar: ctrlWrapper(updateAvatar),
+  verifyUser: ctrlWrapper(verifyUser),
 };

@@ -22,6 +22,8 @@ authRouter.patch(
   ctrlAuth.updateSubscription
 );
 
+authRouter.get(`/verify/:verificationCode`, ctrlAuth.verifyUser);
+
 authRouter.patch('/avatars', authenticate, upload.single('avatar'), ctrlAuth.updateAvatar);
 
 module.exports = authRouter;
