@@ -22,7 +22,10 @@ authRouter.patch(
   ctrlAuth.updateSubscription
 );
 
-authRouter.get(`/verify/:verificationCode`, ctrlAuth.verifyUser);
+authRouter.get('/verify/:verificationToken', ctrlAuth.verifyUser);
+
+// authRouter.post('/verify', validateBody(authSchemas.verifySchema), ctrlAuth.resendEmail);
+authRouter.post('/verify', ctrlAuth.resendEmail);
 
 authRouter.patch('/avatars', authenticate, upload.single('avatar'), ctrlAuth.updateAvatar);
 

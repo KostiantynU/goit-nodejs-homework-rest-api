@@ -11,7 +11,6 @@ const { SECRET_WORD } = process.env;
 const bcrypt = require('bcrypt');
 
 const { HttpError, ctrlWrapper, nodemailerTransport } = require('../helpers');
-const { error } = require('console');
 
 const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
 
@@ -25,19 +24,19 @@ const register = async (req, res, next) => {
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatarUrl = gravatar.url(email);
-  const verificationCode = nanoid();
+  const verificationToken = nanoid();
 
   const newUser = await User.create({
     ...req.body,
     password: hashPassword,
     avatarUrl,
-    verificationCode,
+    verificationToken,
   });
 
   const verificationEmail = {
     to: email,
     subject: `Verify your e-mail`,
-    html: `<a target='_blank' href='http://localhost:3000/api/users/verify/${verificationCode}'>Click to verify your e-mail!</a>`,
+    html: `<a target='_blank' href='http://localhost:3000/api/users/verify/${verificationToken}'>Click to verify your e-mail!</a>`,
   };
 
   const resultSend = await nodemailerTransport.sendMail({
@@ -49,12 +48,16 @@ const register = async (req, res, next) => {
   // res.status(201).json({ name: newUser.name, emai: newUser.email });
 };
 
-const login = async (req, res, next) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
   if (!user) {
     throw HttpError(401, 'Email or password is wrong');
+  }
+
+  if (!user.verify) {
+    throw HttpError(401, 'Email is not verified');
   }
 
   const passwordCompare = await bcrypt.compare(password, user.password);
@@ -70,7 +73,7 @@ const login = async (req, res, next) => {
   res.status(200).json({ token, user: { email: user.email, subscription: user.subscription } });
 };
 
-const getCurrent = async (req, res, next) => {
+const getCurrent = async (req, res) => {
   const { email, subscription } = req.user;
 
   res.status(200).json({ email, subscription });
@@ -80,14 +83,14 @@ const getCurrent = async (req, res, next) => {
   // res.json({ email, name });
 };
 
-const logout = async (req, res, next) => {
+const logout = async (req, res) => {
   const { _id } = req.user;
   await User.findByIdAndUpdate(_id, { token: '' });
 
   res.status(204).json({ message: 'Logout success' });
 };
 
-const updateSubscription = async (req, res, nect) => {
+const updateSubscription = async (req, res) => {
   const { _id } = req.user;
   const { subscription } = req.body;
 
@@ -118,20 +121,51 @@ const updateAvatar = async (req, res) => {
   res.status(200).json({ avatarUrl });
 };
 
-const verifyUser = async (req, res, next) => {
-  const { verificationCode } = req.params;
+const verifyUser = async (req, res) => {
+  const { verificationToken } = req.params;
 
-  const verificatedUser = await User.findOne({ verificationCode: verificationCode });
+  const verificatedUser = await User.findOne({ verificationToken });
 
   if (!verificatedUser) {
-    return res.status(400).json({ message: 'Not found' });
+    return res.status(404).json({ message: 'User not found' });
   }
 
-  verificatedUser.verify = true;
-  verificatedUser.verificationCode = '';
-  await verificatedUser.save();
+  const updatedUser = await User.findByIdAndUpdate(
+    verificatedUser._id,
+    { verify: true, verificationToken: '' },
+    { new: true }
+  );
 
-  res.status(200).json({ message: 'You successfully pass the verification!' });
+  res.status(200).json({ message: 'Verification successful' });
+};
+
+const resendEmail = async (req, res) => {
+  if (!req.body.email) {
+    throw HttpError(400, 'Missing required field email');
+  }
+
+  const resendEmailUser = await User.findOne({ email: req.body.email });
+
+  if (!resendEmailUser) {
+    throw HttpError(400, 'Bad request - maybe you have mistake in email ;-)');
+  }
+
+  if (resendEmailUser.verify) {
+    throw HttpError(401, 'Verification has already been passed');
+  }
+
+  const verificationEmail = {
+    to: resendEmailUser.email,
+    subject: `Verify your e-mail`,
+    html: `<a target='_blank' href='http://localhost:3000/api/users/verify/${resendEmailUser.verificationToken}'>Click to verify your e-mail!</a>`,
+  };
+
+  const resultSend = await nodemailerTransport.sendMail({
+    ...verificationEmail,
+    from: 'engineerkonstantin@gmail.com',
+  });
+
+  res.status(200).json({ message: 'Verification email sent' });
 };
 
 module.exports = {
@@ -142,4 +176,5 @@ module.exports = {
   updateSubscription: ctrlWrapper(updateSubscription),
   updateAvatar: ctrlWrapper(updateAvatar),
   verifyUser: ctrlWrapper(verifyUser),
+  resendEmail: ctrlWrapper(resendEmail),
 };
