@@ -13,20 +13,42 @@ const authenticate = async (req, res, next) => {
     next(HttpError(401, 'Not authorized'));
   }
 
+  if (!token) {
+    throw HttpError(401, 'Not authorized');
+  }
+
   try {
-    const { id } = jwt.verify(token, SECRET_WORD);
+    const payload = jwt.verify(token, SECRET_WORD);
 
-    const user = await User.findById(id);
-
-    if (!user || !user.token || user.token !== token) {
-      next(HttpError(401, 'Not authorized'));
+    if (payload.token !== 'access') {
+      return res.status(401).json({ message: 'Invalid token' });
     }
 
+    const user = await User.findById(payload.id);
+
     req.user = user;
-    next();
-  } catch {
+    // const { id } = jwt.verify(token, SECRET_WORD);
+
+    // const user = await User.findById(id);
+
+    // if (!user || !user.token || user.token !== token) {
+    //   next(HttpError(401, 'Not authorized'));
+    // }
+
+    // req.user = user;
+    // next();
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw HttpError(401, 'Token expired');
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw HttpError(401, 'Invalid token');
+    }
+
     next(HttpError(401));
   }
+
+  next();
 };
 
 module.exports = authenticate;

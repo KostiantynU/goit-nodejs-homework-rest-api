@@ -2,7 +2,7 @@ const { User } = require('../models/users');
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const path = require('path');
-const fs = require('fs/promises');
+// const fs = require('fs/promises');
 const Jimp = require('jimp');
 const { nanoid } = require('nanoid');
 
@@ -10,7 +10,7 @@ const { SECRET_WORD } = process.env;
 
 const bcrypt = require('bcrypt');
 
-const { HttpError, ctrlWrapper, nodemailerTransport } = require('../helpers');
+const { HttpError, ctrlWrapper, nodemailerTransport, checkRefreshToken } = require('../helpers');
 
 const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
 
@@ -66,11 +66,13 @@ const login = async (req, res) => {
     throw HttpError(401, 'Email or password is wrong');
   }
 
-  const payload = { id: user._id };
-  const token = jwt.sign(payload, SECRET_WORD, { expiresIn: '1h' });
-  await User.findByIdAndUpdate(user._id, { token });
+  // const payload = { id: user._id };
+  // const token = jwt.sign(payload, SECRET_WORD, { expiresIn: '1h' });
+  // await User.findByIdAndUpdate(user._id, { token });
 
-  res.status(200).json({ token, user: { email: user.email, subscription: user.subscription } });
+  const tokens = await checkRefreshToken.updateTokens(user._id);
+
+  res.status(200).json({ tokens, user: { email: user.email, subscription: user.subscription } });
 };
 
 const getCurrent = async (req, res) => {

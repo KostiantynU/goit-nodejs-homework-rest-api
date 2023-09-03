@@ -1,4 +1,4 @@
 const ctrlContacts = require('./contactsDBctrl');
 const ctrlAuth = require('./ctrlAuth');
-
-module.exports = { ctrlAuth, ctrlContacts };
+const { refreshToken } = require('./refreshToken');
+module.exports = { ctrlAuth, ctrlContacts, refreshToken };
