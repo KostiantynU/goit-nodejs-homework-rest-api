@@ -23,10 +23,11 @@ describe('registration new user', () => {
 
   it('should register new user', async () => {
     const response = await reqTest('http://localhost:3000/')
+    // const response = await reqTest(app)
       .post('api/users/register')
-      .send({ email: 'userbytest09@gmail.com', password: '123456' });
+      .send({ email: 'userbytest11@gmail.com', password: '123456' });
 
     expect(response.statusCode).toBe(201);
-    expect(response.body.user.email).toBe('userbytest09@gmail.com');
+    expect(response.body.user.email).toBe('userbytest11@gmail.com');
   });
 });
