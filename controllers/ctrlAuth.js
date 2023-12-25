@@ -14,7 +14,7 @@ const { HttpError, ctrlWrapper, nodemailerTransport, checkRefreshToken } = requi
 
 const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
 
-const register = async (req, res, next) => {
+const register = async (req, res, text) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
